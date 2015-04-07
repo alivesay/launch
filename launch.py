@@ -148,7 +148,7 @@ class EC2Launcher(object):
     if status == 'running':
 
       # route53
-      self._add_dns_record(self.config['route53']['privateDomain'], self.config['hostname'], 'A', instance[0].ip_address)
+      self._add_dns_record(self.config['route53']['privateDomain'], self.config['hostname'], 'A', instance[0].private_ip_address)
       if self.config['public']:
         self._add_dns_record(self.config['route53']['publicDomain'], self.config['hostname'], 'A', instance[1].public_ip)
 
