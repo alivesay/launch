@@ -8,8 +8,8 @@ ec2:
   instanceType: m3.medium 
   rootVolumeSize: 100
 puppetRoles:
-  - roles::base
-  - roles::optimus_prime
+  - role::base
+  - role::optimus_prime
 
 hieraData: |
   something: foo

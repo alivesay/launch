@@ -21,7 +21,7 @@ profileDefaults:
   # associate new elastic IP and register publicDomain in Route53
   public: true
   # puppet roles to include in host Hiera data file
-  puppetRoles: [ 'roles::base' ]
+  puppetRoles: [ 'role::base' ]
 
 # cloud-init config script
 # supports: $HOSTNAME, $PUBLIC_DOMAIN
