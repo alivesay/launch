@@ -1,0 +1,69 @@
+# where to save instance Hiera data files
+hieraHostPath: /etc/puppet/hierdata/hosts
+
+# default instance values
+profileDefaults:
+  route53:
+    publicDomain: something.tld
+    privateDomain: internal.something.tld
+  ec2:
+    ami: ami-0123456
+    key: name_of_your_key
+    availabilityZone: us-west-2
+    subnet: subnet-0abcdef
+    securityGroups:
+      - sg-a0000001
+      - sg-a0000002
+      - sg-a0000003
+    instanceType: t2.micro
+    rootVolumeSize: 10
+    ebsOptimized: true
+  # associate new elastic IP and register publicDomain in Route53
+  public: true
+  # puppet roles to include in host Hiera data file
+  puppetRoles: [ 'roles::base' ]
+
+# cloud-init config script
+# supports: $HOSTNAME, $PUBLIC_DOMAIN
+cloud_config: |
+  output: {all: ">> /var/log/cloud-init-output.log"}
+  final_message: "clout-init completed"
+   
+  runcmd:
+   - echo "127.0.1.1 $HOSTNAME.$PUBLIC_DOMAIN" >> /etc/hosts
+   - echo "127.0.1.2 $HOSTNAME.$PRIVATE_DOMAIN $HOSTNAME" >> /etc/hosts
+   - echo "$HOSTNAME" > /etc/hostname
+   - hostname --file /etc/hostname
+  
+  apt_sources:
+   - source: deb http://apt.puppetlabs.com $RELEASE main dependencies
+     keyid: 4BD6EC30
+     filename: puppetlabs.list
+  
+  apt_update: true
+  apt_upgrade: true
+  apt_reboot_if_required: true
+  
+  packages:
+   - puppet
+
+# cloud-init user script
+user_script: |
+  #!/bin/bash
+  
+  PUPPET_SSL_DIR=/var/lib/puppet/ssl
+  PUPPET_SSL_CERT_DIR=/var/lib/puppet/ssl/certs
+  PUPPET_SSL_CERT_PATH=/var/lib/puppet/ssl/certs/ca.pem
+  
+  mkdir -p $PUPPET_SSL_CERT_DIR
+  chmod 0771 $PUPPET_SSL_DIR
+  cat <<EOF
+  -----BEGIN CERTIFICATE-----
+  <YOUR CERT HERE>
+  -----END CERTIFICATE-----
+  EOF
+  chown -R puppet:root $PUPPET_SSL_DIR
+  sed -i /etc/default/puppet -e 's/START=no/START=yes/'
+  sleep 10
+  puppet agent --enable
+  puppet agent --test --waitforcert 60

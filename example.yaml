@@ -1,0 +1,16 @@
+hostname: example
+ec2:
+  ami: ami-39501209
+  securityGroups:
+    - sg-b0000001
+    - sg-b0000002
+    - sg-b0000003
+  instanceType: m3.medium 
+  rootVolumeSize: 100
+puppetRoles:
+  - roles::base
+  - roles::optimus_prime
+
+hieraData: |
+  something: foo
+  another: bar
