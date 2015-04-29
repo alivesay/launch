@@ -39,11 +39,11 @@ from email.mime.text import MIMEText
 
 class EC2Launcher(object):
 
-  def __init__(self, settings, config):
+  def __init__(self, settings, config, base):
     self.settings = settings
+    self.config = self._merge_config(base, config)
     self.config = self._merge_config(settings.get('profileDefaults'), config)
-
-
+  
   def _merge_config(self, defaults, config):
     if isinstance(config,dict) and isinstance(defaults,dict):
       for k,v in defaults.iteritems():
@@ -178,14 +178,14 @@ def parse_args():
 
   server_opts = { }
   base_parser.add_argument('config_file',
-                           help='config file',
+                           help='CONFIG_FILE',
                            **server_opts)
 
-  base_parser.add_argument('--no-defaults',
-                           help='ignore default values',
-                           action='store_true',
+  base_parser.add_argument('--base',
+                           help='Base YAML template to use.',
+                           action='store',
                            default=False,
-                           dest='no_defaults')
+                           dest='base_file')
 
   return base_parser.parse_args()
 
@@ -193,7 +193,10 @@ def parse_args():
 if __name__ == '__main__':
   args = parse_args()
   settings = yaml.load(open('settings.yaml', 'r'))
+  
+  base = yaml.load(open(args.base_file, 'r')) if args.base_file else None
+
   config = yaml.load(open(args.config_file, 'r'))
  
-  ec2_launcher = EC2Launcher(settings, config)
+  ec2_launcher = EC2Launcher(settings, config, base)
   ec2_launcher.run()
