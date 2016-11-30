@@ -63,6 +63,7 @@ class EC2Launcher(object):
     changes = ResourceRecordSets(conn, zone.id, record_comment)
     change = changes.add_change('CREATE', '%s.%s' % (record_name, hosted_zone), record_type, record_ttl)
     change.add_value(record_value)
+#    if not self.config['dry_run']:
     changes.commit()
 
 
@@ -89,6 +90,7 @@ class EC2Launcher(object):
     bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
     dev_sda1 = boto.ec2.blockdevicemapping.EBSBlockDeviceType()
     dev_sda1.size = self.config['ec2']['rootVolumeSize']
+    dev_sda1.encrypted = self.config['ec2']['encrypted']
     dev_sda1.delete_on_termination = False
     dev_sda1.volume_type = 'gp2'
     bdm['/dev/sda1'] = dev_sda1
@@ -98,6 +100,7 @@ class EC2Launcher(object):
     
     if self.config['public']:
       eip = conn_ec2.allocate_address(domain='vpc')
+      time.sleep(5)
       aa = conn_ec2.associate_address(allocation_id=eip.allocation_id,
                                       network_interface_id=eni.id)
 
@@ -186,6 +189,12 @@ def parse_args():
                            action='store',
                            default=False,
                            dest='base_file')
+ 
+  base_parser.add_argument('--dry',
+                           help="Don't actually make changes.",
+                           action='store_true',
+                           default=False,
+                           dest='dry_run')
 
   return base_parser.parse_args()
 
